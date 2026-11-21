@@ -88,7 +88,6 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.7.0")
 
     // Markdown
-    implementation("com.github.jeziellago:compose-markdown:0.5.4")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
