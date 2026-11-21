@@ -1,0 +1,56 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Generate Wrapper & Build Release APK
+        env:
+          KEYSTORE_PASSWORD: agenthub2026
+          KEY_PASSWORD: agenthub2026
+        run: |
+          gradle wrapper --gradle-version 8.9
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: AgentHub-1.0.0
+          path: app/build/outputs/apk/release/*.apk
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main'
+        with:
+          tag_name: v1.0.0
+          name: AgentHub v1.0.0
+          body: |
+            ## AgentHub 1.0.0
+            Native Jetpack Compose AI Agent Hub.
+            - OpenAI-compatible chat (local llama-server / Ollama / cloud)
+            - Agent tools: file_write/read/list/delete, http_get/post, calculator
+            - Model catalog + agents
+            - Material 3 UI
+          files: app/build/outputs/apk/release/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
