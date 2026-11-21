@@ -18,26 +18,32 @@ jobs:
           distribution: 'temurin'
           cache: 'gradle'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          packages: 'tools platform-tools platforms;android-35 build-tools;35.0.0'
+      - name: Install Android SDK commandline tools
+        run: |
+          mkdir -p $HOME/android-sdk/cmdline-tools
+          curl -fsSL https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o /tmp/cmdtools.zip
+          unzip -q /tmp/cmdtools.zip -d $HOME/android-sdk/cmdline-tools
+          mv $HOME/android-sdk/cmdline-tools/cmdline-tools $HOME/android-sdk/cmdline-tools/latest
+          echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=$HOME/android-sdk" >> $GITHUB_ENV
+          echo "$HOME/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          echo "$HOME/android-sdk/platform-tools" >> $GITHUB_PATH
 
-      - name: Build with Gradle
+      - name: Accept licenses and install packages
+        run: |
+          yes | sdkmanager --sdk_root=$HOME/android-sdk --licenses > /dev/null || true
+          sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Build Release APK
         env:
           KEYSTORE_PASSWORD: agenthub2026
           KEY_PASSWORD: agenthub2026
         run: |
-          chmod +x gradlew || true
-          if [ ! -f gradlew ]; then
+          if [ ! -x gradlew ]; then
             gradle wrapper --gradle-version 8.9
             chmod +x gradlew
           fi
           ./gradlew assembleRelease --no-daemon --stacktrace
-
-      - name: List outputs
-        if: always()
-        run: find app/build -name "*.apk" 2>/dev/null || echo "no apk yet"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
@@ -54,11 +60,7 @@ jobs:
           name: AgentHub v1.0.0
           body: |
             ## AgentHub 1.0.0
-            Native Jetpack Compose AI Agent Hub.
-            - OpenAI-compatible chat (local llama-server / Ollama / cloud)
-            - Agent tools: file_write/read/list/delete, http_get/post, calculator
-            - Model catalog + agents
-            - Material 3 UI
+            Native Jetpack Compose AI Agent Hub with tools.
           files: app/build/outputs/apk/release/*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
