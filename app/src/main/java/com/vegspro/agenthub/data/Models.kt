@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ChatMessage(
     val id: String = java.util.UUID.randomUUID().toString(),
-    val role: String, // "user", "assistant", "system", "tool"
+    val role: String,
     val content: String,
     val toolCalls: List<ToolCall>? = null,
     val toolCallId: String? = null,
@@ -38,6 +38,7 @@ data class ModelInfo(
     val quant: String = "",
     val downloadUrl: String? = null,
     val hfRepo: String? = null,
+    val filename: String? = null,
     val isLocal: Boolean = false,
     val path: String? = null
 )
@@ -50,49 +51,100 @@ data class AppSettings(
     val temperature: Float = 0.7f,
     val maxTokens: Int = 2048,
     val systemPrompt: String = "You are a helpful AI assistant running on the user's Android phone. You have tools to work with files and make HTTP requests. Be concise and useful.",
-    val enableTools: Boolean = true
+    val enableTools: Boolean = true,
+    val appliedLocalModelPath: String? = null
 )
 
 val PRESET_MODELS = listOf(
     ModelInfo(
         id = "qwen2.5-0.5b",
         name = "Qwen2.5 0.5B Instruct",
-        description = "Tiny fast model, good for phones with 4-6 GB RAM",
-        size = "~400 MB",
+        description = "Tiny fast model, good for phones with 4–6 GB RAM",
+        size = "~398 MB",
         quant = "Q4_K_M",
-        hfRepo = "Qwen/Qwen2.5-0.5B-Instruct-GGUF"
+        hfRepo = "Qwen/Qwen2.5-0.5B-Instruct-GGUF",
+        filename = "qwen2.5-0.5b-instruct-q4_k_m.gguf",
+        downloadUrl = "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/qwen2.5-0.5b-instruct-q4_k_m.gguf"
     ),
     ModelInfo(
         id = "qwen2.5-1.5b",
         name = "Qwen2.5 1.5B Instruct",
         description = "Balanced small model",
-        size = "~1.0 GB",
+        size = "~986 MB",
         quant = "Q4_K_M",
-        hfRepo = "Qwen/Qwen2.5-1.5B-Instruct-GGUF"
+        hfRepo = "Qwen/Qwen2.5-1.5B-Instruct-GGUF",
+        filename = "qwen2.5-1.5b-instruct-q4_k_m.gguf",
+        downloadUrl = "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf"
     ),
     ModelInfo(
         id = "smollm2-1.7b",
-        name = "SmolLM2 1.7B",
+        name = "SmolLM2 1.7B Instruct",
         description = "Excellent small model from HuggingFace",
-        size = "~1.1 GB",
+        size = "~1.05 GB",
         quant = "Q4_K_M",
-        hfRepo = "HuggingFaceTB/SmolLM2-1.7B-Instruct-GGUF"
-    ),
-    ModelInfo(
-        id = "phi-3.5-mini",
-        name = "Phi-3.5 Mini",
-        description = "Microsoft Phi-3.5, strong reasoning for size",
-        size = "~2.2 GB",
-        quant = "Q4_K_M",
-        hfRepo = "microsoft/Phi-3.5-mini-instruct-gguf"
+        hfRepo = "HuggingFaceTB/SmolLM2-1.7B-Instruct-GGUF",
+        filename = "smollm2-1.7b-instruct-q4_k_m.gguf",
+        downloadUrl = "https://huggingface.co/HuggingFaceTB/SmolLM2-1.7B-Instruct-GGUF/resolve/main/smollm2-1.7b-instruct-q4_k_m.gguf"
     ),
     ModelInfo(
         id = "gemma-2-2b",
-        name = "Gemma 2 2B",
+        name = "Gemma 2 2B IT",
         description = "Google Gemma 2, good quality",
         size = "~1.6 GB",
         quant = "Q4_K_M",
-        hfRepo = "google/gemma-2-2b-it-GGUF"
+        hfRepo = "bartowski/gemma-2-2b-it-GGUF",
+        filename = "gemma-2-2b-it-Q4_K_M.gguf",
+        downloadUrl = "https://huggingface.co/bartowski/gemma-2-2b-it-GGUF/resolve/main/gemma-2-2b-it-Q4_K_M.gguf"
+    ),
+    ModelInfo(
+        id = "phi-3.5-mini",
+        name = "Phi-3.5 Mini Instruct",
+        description = "Microsoft Phi-3.5, strong reasoning for size",
+        size = "~2.2 GB",
+        quant = "Q4_K_M",
+        hfRepo = "bartowski/Phi-3.5-mini-instruct-GGUF",
+        filename = "Phi-3.5-mini-instruct-Q4_K_M.gguf",
+        downloadUrl = "https://huggingface.co/bartowski/Phi-3.5-mini-instruct-GGUF/resolve/main/Phi-3.5-mini-instruct-Q4_K_M.gguf"
+    ),
+    ModelInfo(
+        id = "qwen2.5-3b",
+        name = "Qwen2.5 3B Instruct",
+        description = "Strong 3B model, needs ~6+ GB free RAM",
+        size = "~1.9 GB",
+        quant = "Q4_K_M",
+        hfRepo = "Qwen/Qwen2.5-3B-Instruct-GGUF",
+        filename = "qwen2.5-3b-instruct-q4_k_m.gguf",
+        downloadUrl = "https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF/resolve/main/qwen2.5-3b-instruct-q4_k_m.gguf"
+    ),
+    ModelInfo(
+        id = "qwen3-4b",
+        name = "Qwen3 4B Instruct",
+        description = "Newer Qwen3 4B — good quality, needs 8+ GB RAM",
+        size = "~2.5 GB",
+        quant = "Q4_K_M",
+        hfRepo = "Qwen/Qwen3-4B-GGUF",
+        filename = "Qwen3-4B-Q4_K_M.gguf",
+        downloadUrl = "https://huggingface.co/Qwen/Qwen3-4B-GGUF/resolve/main/Qwen3-4B-Q4_K_M.gguf"
+    ),
+    ModelInfo(
+        id = "llama-3.2-3b",
+        name = "Llama 3.2 3B Instruct",
+        description = "Meta Llama 3.2 3B, solid all-rounder",
+        size = "~2.0 GB",
+        quant = "Q4_K_M",
+        hfRepo = "bartowski/Llama-3.2-3B-Instruct-GGUF",
+        filename = "Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+        downloadUrl = "https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q4_K_M.gguf"
+    ),
+    ModelInfo(
+        id = "qwen2.5-7b",
+        name = "Qwen2.5 7B Instruct",
+        description = "Larger model — only for high-end phones (12+ GB RAM)",
+        size = "~4.4 GB",
+        quant = "Q4_K_M",
+        hfRepo = "Qwen/Qwen2.5-7B-Instruct-GGUF",
+        filename = "qwen2.5-7b-instruct-q4_k_m.gguf",
+        downloadUrl = "https://huggingface.co/Qwen/Qwen2.5-7B-Instruct-GGUF/resolve/main/qwen2.5-7b-instruct-q4_k_m.gguf"
     )
 )
 

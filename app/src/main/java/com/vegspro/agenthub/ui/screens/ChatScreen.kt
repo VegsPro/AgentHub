@@ -8,17 +8,16 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import com.vegspro.agenthub.data.ChatMessage
 import com.vegspro.agenthub.viewmodel.ChatViewModel
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,7 +27,7 @@ fun ChatScreen(viewModel: ChatViewModel) {
     val error by viewModel.error.collectAsState()
     var input by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
-    val scope = rememberCoroutineScope()
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
@@ -36,7 +35,11 @@ fun ChatScreen(viewModel: ChatViewModel) {
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .imePadding() // поднимает ввод над клавиатурой
+    ) {
         TopAppBar(
             title = { Text("AgentHub") },
             actions = {
@@ -90,7 +93,8 @@ fun ChatScreen(viewModel: ChatViewModel) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(12.dp)
+                .navigationBarsPadding(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             OutlinedTextField(
@@ -108,6 +112,7 @@ fun ChatScreen(viewModel: ChatViewModel) {
                     if (text.isNotEmpty()) {
                         viewModel.sendMessage(text)
                         input = ""
+                        keyboardController?.hide()
                     }
                 },
                 enabled = !isLoading && input.isNotBlank()
